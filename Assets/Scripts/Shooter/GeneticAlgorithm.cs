@@ -5,31 +5,169 @@ using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
+//[Serializable]
+//public class GeneticAlgorithm
+//{
+    
+//    public List<Individual> population;
+//    private int _currentIndex;
+
+//    public int CurrentGeneration;
+//    public int MaxGenerations;
+
+//    public string Summary;
+//    public GeneticAlgorithm(int numberOfGenerations, int populationSize)
+//    {
+//        CurrentGeneration = 0;
+//        MaxGenerations = numberOfGenerations;
+//        GenerateRandomPopulation(populationSize);
+//        Summary = "";
+//    }
+//    public void GenerateRandomPopulation(int size)
+//    {
+//        population = new List<Individual>();
+//        for (int i = 0; i < size; i++)
+//        {
+//            population.Add(new Individual(Random.Range(0f,90f), Random.Range(-45f, 45f), Random.Range(0f,12f)));
+//        }
+//        StartGeneration();
+//    }
+
+//    public Individual GetFittest()
+//    {
+//        population.Sort();
+//        return population[0];
+//    }
+
+
+//    public void StartGeneration()
+//    {
+//        _currentIndex = 0;
+//        CurrentGeneration ++;
+//    }
+//    public Individual GetNext()
+//    {
+//        if (_currentIndex == population.Count)
+//        {
+//            EndGeneration();
+//            if (CurrentGeneration >= MaxGenerations)
+//            {
+//                Debug.Log(Summary);
+//                return null;
+//            }
+//            StartGeneration();
+//        }
+
+//        return population[_currentIndex++];
+//    }
+
+//    public void EndGeneration()
+//    {
+//        population.Sort();
+//        Summary += $"{GetFittest().fitness};";
+//        if (CurrentGeneration < MaxGenerations)
+//        {
+//            Crossover();
+//            Mutation();
+//        }
+//    }
+
+//    public void Crossover()
+//    {
+//        //SELECCION
+//        var ind1 = population[0];
+//        var ind2 = population[1];
+//        //
+
+//        //Cruce Plano Mono Punto//
+//        var new1 =new Individual(ind1.degree_x, ind2.degree_y, ind2.strength);
+//        var new2 = new Individual(ind2.degree_x, ind2.degree_y, ind1.strength);
+
+//        //REEMPLAZO
+//        population.RemoveAt(population.Count - 1);
+//        population.RemoveAt(population.Count - 1);
+//        population.Add(new1);
+//        population.Add(new2);
+//    }
+
+//    public void Mutation()
+//    {
+//        foreach (var individual in population)
+//        {
+//            if (Random.Range(0f, 1f) < 0.02f)
+//            {
+//                individual.degree_x = Random.Range(0f, 90f);
+//            }
+//            if (Random.Range(0f, 1f) < 0.02f)
+//            {
+//                individual.strength = Random.Range(0f, 12f);
+//            }
+//            if (Random.Range(0f, 1f) < 0.02f)
+//            {
+//                individual.degree_y = Random.Range(-45f, 45f);
+//            }
+//        }
+//    }
+//}
+
+
+
+public enum CrossoverType
+{
+    OnePoint,
+    Average,
+    Uniform
+}
+
+public enum MutationType
+{
+    RandomReset,
+    Gaussian,
+    Adaptive
+}
+
 [Serializable]
 public class GeneticAlgorithm
 {
-    
     public List<Individual> population;
+
     private int _currentIndex;
 
     public int CurrentGeneration;
     public int MaxGenerations;
 
+    private CrossoverType crossoverType;
+    private MutationType mutationType;
+
     public string Summary;
-    public GeneticAlgorithm(int numberOfGenerations, int populationSize)
+
+    public GeneticAlgorithm(int generations, int populationSize,
+        CrossoverType crossover,
+        MutationType mutation)
     {
-        CurrentGeneration = 0;
-        MaxGenerations = numberOfGenerations;
+        MaxGenerations = generations;
+        crossoverType = crossover;
+        mutationType = mutation;
+
         GenerateRandomPopulation(populationSize);
-        Summary = "";
+        Summary = "Generation,Fitness\n";
     }
-    public void GenerateRandomPopulation(int size)
+
+    void GenerateRandomPopulation(int size)
     {
         population = new List<Individual>();
+
         for (int i = 0; i < size; i++)
         {
-            population.Add(new Individual(Random.Range(0f,90f), Random.Range(0f,12f)));
+            population.Add(
+                new Individual(
+                    Random.Range(0f, 90f),
+                    Random.Range(-45f, 45f),
+                    Random.Range(0f, 12f)
+                )
+            );
         }
+
         StartGeneration();
     }
 
@@ -39,69 +177,141 @@ public class GeneticAlgorithm
         return population[0];
     }
 
-
-    public void StartGeneration()
+    void StartGeneration()
     {
         _currentIndex = 0;
-        CurrentGeneration ++;
+        CurrentGeneration++;
     }
+
     public Individual GetNext()
     {
-        if (_currentIndex == population.Count)
+        if (_currentIndex >= population.Count)
         {
             EndGeneration();
+
             if (CurrentGeneration >= MaxGenerations)
             {
                 Debug.Log(Summary);
                 return null;
             }
+
             StartGeneration();
         }
 
         return population[_currentIndex++];
     }
 
-    public void EndGeneration()
+    void EndGeneration()
     {
         population.Sort();
-        Summary += $"{GetFittest().fitness};";
-        if (CurrentGeneration < MaxGenerations)
+
+        Summary += $"{CurrentGeneration},{population[0].fitness}\n";
+
+        Crossover();
+        Mutation();
+    }
+
+    // ======================
+    // CROSSOVER
+    // ======================
+    void Crossover()
+    {
+        Individual p1 = population[0];
+        Individual p2 = population[1];
+
+        Individual c1 = null;
+        Individual c2 = null;
+
+        switch (crossoverType)
         {
-            Crossover();
-            Mutation();
+            case CrossoverType.OnePoint:
+                c1 = new Individual(p1.degree_x, p1.degree_y, p2.strength);
+                c2 = new Individual(p2.degree_x, p2.degree_y, p1.strength);
+                break;
+
+            case CrossoverType.Average:
+                float deg_x = (p1.degree_x + p2.degree_x) * 0.5f;
+                float deg_y = (p1.degree_y + p2.degree_y) * 0.5f;
+                float str = (p1.strength + p2.strength) * 0.5f;
+
+                c1 = new Individual(deg_x, deg_y, str);
+                c2 = new Individual(deg_x, deg_y, str);
+                break;
+
+            case CrossoverType.Uniform:
+                float d1_x = Random.value < 0.5f ? p1.degree_x : p2.degree_x;
+                float d1_y = Random.value < 0.5f ? p1.degree_y : p2.degree_y;
+                float s1 = Random.value < 0.5f ? p1.strength : p2.strength;
+
+                float d2_x = Random.value < 0.5f ? p1.degree_x : p2.degree_x;
+                float d2_y = Random.value < 0.5f ? p1.degree_y : p2.degree_y;
+                float s2 = Random.value < 0.5f ? p1.strength : p2.strength;
+
+                c1 = new Individual(d1_x, d1_y, s1);
+                c2 = new Individual(d2_x, d2_y, s2);
+                break;
         }
-    }
 
-    public void Crossover()
-    {
-        //SELECCION
-        var ind1 = population[0];
-        var ind2 = population[1];
-        //
-
-        //Cruce Plano Mono Punto//
-        var new1 =new Individual(ind1.degree,ind2.strength);
-        var new2 = new Individual(ind2.degree, ind1.strength);
-
-        //REEMPLAZO
         population.RemoveAt(population.Count - 1);
         population.RemoveAt(population.Count - 1);
-        population.Add(new1);
-        population.Add(new2);
+
+        population.Add(c1);
+        population.Add(c2);
     }
 
-    public void Mutation()
+    // ======================
+    // MUTATION
+    // ======================
+    void Mutation()
     {
-        foreach (var individual in population)
+        foreach (var ind in population)
         {
-            if (Random.Range(0f, 1f) < 0.02f)
+            switch (mutationType)
             {
-                individual.degree = Random.Range(0f, 90f);
+                case MutationType.RandomReset:
+                    if (Random.value < 0.02f)
+                        ind.degree_x = Random.Range(0f, 90f);
+
+                    if (Random.value < 0.02f)
+                        ind.degree_y = Random.Range(-45f, 45f);
+
+                    if (Random.value < 0.02f)
+                        ind.strength = Random.Range(0f, 12f);
+                    break;
+
+                case MutationType.Gaussian:
+                    if (Random.value < 0.2f)
+                        ind.degree_x += Random.Range(-5f, 5f);
+
+                    if (Random.value < 0.2f)
+                        ind.degree_y += Random.Range(-5f, 5f);
+
+                    if (Random.value < 0.2f)
+                        ind.strength += Random.Range(-1f, 1f);
+                    break;
+
+                case MutationType.Adaptive:
+                    float rate = Mathf.Lerp(
+                        0.1f,
+                        0.01f,
+                        (float)CurrentGeneration / MaxGenerations
+                    );
+
+                    if (Random.value < rate)
+                        ind.degree_x = Random.Range(0f, 90f);
+
+                    if (Random.value < rate)
+                        ind.degree_y = Random.Range(-45f, 45f);
+
+                    if (Random.value < rate)
+                        ind.strength = Random.Range(0f, 12f);
+                    break;
             }
-            if (Random.Range(0f, 1f) < 0.02f)
-            {
-                individual.strength = Random.Range(0f, 12f);
-            }
+
+            ind.degree_x = Mathf.Clamp(ind.degree_x, 0f, 90f);
+            ind.degree_y = Mathf.Clamp(ind.degree_y, -45f, 45f);
+            ind.strength = Mathf.Clamp(ind.strength, 0f, 12f);
         }
     }
 }
+
