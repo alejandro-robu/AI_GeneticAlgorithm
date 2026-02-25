@@ -7,6 +7,14 @@ using UnityEngine;
 
 public class AIController : MonoBehaviour
 {
+    public enum AIMode
+    {
+        Minimax,
+        Genetic
+    }
+
+    public AIMode Mode = AIMode.Minimax;
+
     public PlayerManager Body;
     protected PlayerInfo _player;
 
@@ -21,7 +29,7 @@ public class AIController : MonoBehaviour
 
     private static int MaxPly = 3;
 
-
+    bool turnRunning = false;
     bool isActing = false;
     public virtual void Awake()
     {
@@ -31,6 +39,10 @@ public class AIController : MonoBehaviour
 
     public void OnGameTurnChange(PlayerInfo currentTurn)
     {
+        if (turnRunning) return;
+
+        turnRunning = true;
+
         Debug.Log($"Current Turn: {currentTurn.Name}");
         if (currentTurn != _player) return;
         Perceive();
@@ -44,20 +56,50 @@ public class AIController : MonoBehaviour
         _currentLogicState = new LogicState(GameState);
     }
 
-    protected virtual void Think()
+    public virtual void Think()
     {
         _attackToDo = null;
-       
-        ExpectMiniMax();
-        
+
+        switch (Mode)
+        {
+            case AIMode.Minimax:
+                ExpectMiniMax();
+                break;
+
+            case AIMode.Genetic:
+                ExpectGenetic();
+                break;
+        }
+
     }
 
-    private void ExpectMiniMax()
+
+
+    protected void ExpectMiniMax()
     {
         _alpha = -20;
         _beta = +20;
         var value = MaxValor(_currentLogicState);
         Debug.Log($"Minimax ---> Action:{_attackToDo}:{value}");
+    }
+
+    protected void ExpectGenetic()
+    {
+        var genome = (this as GeneticController1on1).ActiveGenome;
+
+        var attacks = _player.Attacks;
+
+        int index = genome.DecideAttack(GameState, _player.Id);
+
+        var chosen = attacks[index];
+
+        _attackToDo = ScriptableObject.CreateInstance<Attack>();
+        _attackToDo.AttackMade = chosen;
+        _attackToDo.Source = _player;
+        _attackToDo.Target =
+            GameState.ListOfPlayers.Players[_player.EnemyId];
+
+        Debug.Log($"Genetic ---> Action:{_attackToDo}:{chosen}");
     }
 
 
@@ -172,6 +214,7 @@ public class AIController : MonoBehaviour
         yield return null;
         isActing = false;
     }
+
 
 }
 

@@ -29,25 +29,41 @@ using UnityEngine;
 
 public class GeneticController1on1 : AIController
 {
-    public enum Mode
+    public enum ActMode
     {
         Learning,
         Play
     }
 
-    public Mode CurrentMode = Mode.Learning;
+    public ActMode CurrentMode = ActMode.Learning;
 
     public GeneticGenome ActiveGenome;
 
-    protected override void Think()
-    {
-        if (ActiveGenome == null)
-        {
-            RandomAction();
-            return;
-        }
+    //protected override void Think()
+    //{
+    //    if (ActiveGenome == null)
+    //    {
+    //        RandomAction();
+    //        return;
+    //    }
 
-        ChooseBestAttack();
+    //    ChooseBestAttack();
+    //}
+
+    public override void Think()
+    {
+        _attackToDo = null;
+
+        Debug.Log($"Thinking Mode: {Mode}");
+
+        if (Mode == AIMode.Genetic)
+        {
+            ExpectGenetic();
+        }
+        else
+        {
+            ExpectMiniMax();
+        }
     }
 
     void ChooseBestAttack()

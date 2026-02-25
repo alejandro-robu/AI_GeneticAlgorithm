@@ -22,15 +22,31 @@ public class GameLogic : MonoBehaviour
         ChangeTurn();
     }
 
-    
+
+    //public void ChangeTurn()
+    //{
+    //    var next = _count;
+    //    _count = (_count + 1) % 2;
+    //    GameState.CurrentPlayer = PlayerList.Players[next];
+    //    ChangeTurnEvent.Raise(PlayerList.Players[next]);
+
+
+    //}
+
     public void ChangeTurn()
     {
+        StartCoroutine(ChangeTurnNextFrame());
+    }
+
+    private IEnumerator ChangeTurnNextFrame()
+    {
+        yield return null; // espera un frame
+
         var next = _count;
         _count = (_count + 1) % 2;
+
         GameState.CurrentPlayer = PlayerList.Players[next];
         ChangeTurnEvent.Raise(PlayerList.Players[next]);
-        
-
     }
 
     private bool EndGameTest()

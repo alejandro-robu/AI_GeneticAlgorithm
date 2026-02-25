@@ -11,12 +11,13 @@ public class GeneticBattleEvaluator : MonoBehaviour
     float startHP_Enemy;
 
     public IEnumerator EvaluateGenome(
-        GeneticGenome genome,
-        Action<float> onFinished)
+    GeneticGenome genome,
+    Action<float> onFinished)
     {
         GeneticAI.ActiveGenome = genome;
 
-        ResetBattle();
+        // ---- RESET ----
+        yield return StartCoroutine(ResetBattle());
 
         startHP_AI =
             GeneticAI.GameState.ListOfPlayers.Players[
@@ -26,16 +27,19 @@ public class GeneticBattleEvaluator : MonoBehaviour
             GeneticAI.GameState.ListOfPlayers.Players[
                 GeneticAI.Body.Info.EnemyId].HP;
 
+        // ---- RUN ----
         yield return StartCoroutine(RunBattle());
 
+        // ---- FITNESS ----
         float fitness = CalculateFitness();
 
         onFinished?.Invoke(fitness);
+
+        yield return null;
     }
 
     IEnumerator RunBattle()
     {
-        // espera hasta que alguien muera
         while (!BattleFinished())
             yield return null;
     }
@@ -61,20 +65,21 @@ public class GeneticBattleEvaluator : MonoBehaviour
              - (startHP_AI - aiHP);
     }
 
-    void ResetBattle()
+    IEnumerator ResetBattle()
     {
+        GeneticAI.StopAllCoroutines();
+        OpponentAI.StopAllCoroutines();
+
+        yield return null;
+
         GeneticAI.GameState.ResetState();
 
-        StartCoroutine(StartBattleNextFrame());
-    }
-
-    IEnumerator StartBattleNextFrame()
-    {
-        // deja que Unity procese cambios del ScriptableObject
         yield return null;
+
 
         var firstPlayer =
             GeneticAI.GameState.ListOfPlayers.Players[0];
+        Debug.Log($"Starting new battle, first player is: {firstPlayer}");
 
         GeneticAI.OnGameTurnChange(firstPlayer);
         OpponentAI.OnGameTurnChange(firstPlayer);
@@ -86,6 +91,6 @@ public class GeneticBattleEvaluator : MonoBehaviour
 
         GeneticAI.ActiveGenome = best;
         GeneticAI.CurrentMode =
-            GeneticController1on1.Mode.Play;
+            GeneticController1on1.ActMode.Play;
     }
 }

@@ -323,6 +323,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 848fe34a35bbce246b7092acf5203b7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Mode: 1
   Body: {fileID: 1369133472}
   GameState: {fileID: 11400000, guid: a841703fbd27b28448b694a9b62f749e, type: 2}
   AttackEvent: {fileID: 11400000, guid: f7754349b4b62e44a887465c45d4dc0c, type: 2}
@@ -955,6 +956,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4616e1bb22d1b314385c2b1763133d7b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Mode: 0
   Body: {fileID: 440431657597136741}
   GameState: {fileID: 11400000, guid: a841703fbd27b28448b694a9b62f749e, type: 2}
   AttackEvent: {fileID: 11400000, guid: f7754349b4b62e44a887465c45d4dc0c, type: 2}

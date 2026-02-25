@@ -36,7 +36,10 @@ public class GameState : ScriptableObject, ISerializationCallbackReceiver
             player.Energy = player.InitialEnergy;
         }
 
-
+        //CurrentPlayer = null;
         CurrentPlayer = ListOfPlayers.Players[0];
+
+        LeftPlayerIsHuman = false;
+        RightPlayerIsHuman = false;
     }
 }
