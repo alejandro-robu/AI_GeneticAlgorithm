@@ -24,4 +24,19 @@ public class GameState : ScriptableObject, ISerializationCallbackReceiver
     {
        
     }
+
+    public void ResetState()
+    {
+        TurnNumber = 1;
+        IsFinished = false;
+
+        foreach (var player in ListOfPlayers.Players)
+        {
+            player.HP = player.InitialHP;
+            player.Energy = player.InitialEnergy;
+        }
+
+
+        CurrentPlayer = ListOfPlayers.Players[0];
+    }
 }

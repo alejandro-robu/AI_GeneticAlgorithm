@@ -1,0 +1,91 @@
+using System;
+using System.Collections;
+using UnityEngine;
+
+public class GeneticBattleEvaluator : MonoBehaviour
+{
+    public GeneticController1on1 GeneticAI;
+    public AIController OpponentAI;
+
+    float startHP_AI;
+    float startHP_Enemy;
+
+    public IEnumerator EvaluateGenome(
+        GeneticGenome genome,
+        Action<float> onFinished)
+    {
+        GeneticAI.ActiveGenome = genome;
+
+        ResetBattle();
+
+        startHP_AI =
+            GeneticAI.GameState.ListOfPlayers.Players[
+                GeneticAI.Body.Info.Id].HP;
+
+        startHP_Enemy =
+            GeneticAI.GameState.ListOfPlayers.Players[
+                GeneticAI.Body.Info.EnemyId].HP;
+
+        yield return StartCoroutine(RunBattle());
+
+        float fitness = CalculateFitness();
+
+        onFinished?.Invoke(fitness);
+    }
+
+    IEnumerator RunBattle()
+    {
+        // espera hasta que alguien muera
+        while (!BattleFinished())
+            yield return null;
+    }
+
+    bool BattleFinished()
+    {
+        var players =
+            GeneticAI.GameState.ListOfPlayers.Players;
+
+        return players[0].HP <= 0 ||
+               players[1].HP <= 0;
+    }
+
+    float CalculateFitness()
+    {
+        var players =
+            GeneticAI.GameState.ListOfPlayers.Players;
+
+        float aiHP = players[0].HP;
+        float enemyHP = players[1].HP;
+
+        return (startHP_Enemy - enemyHP)
+             - (startHP_AI - aiHP);
+    }
+
+    void ResetBattle()
+    {
+        GeneticAI.GameState.ResetState();
+
+        StartCoroutine(StartBattleNextFrame());
+    }
+
+    IEnumerator StartBattleNextFrame()
+    {
+        // deja que Unity procese cambios del ScriptableObject
+        yield return null;
+
+        var firstPlayer =
+            GeneticAI.GameState.ListOfPlayers.Players[0];
+
+        GeneticAI.OnGameTurnChange(firstPlayer);
+        OpponentAI.OnGameTurnChange(firstPlayer);
+    }
+
+    public void SwitchToPlayMode(GeneticGenome best)
+    {
+        Debug.Log("SWITCHING TO PLAY MODE");
+
+        GeneticAI.ActiveGenome = best;
+        GeneticAI.CurrentMode =
+            GeneticController1on1.Mode.Play;
+    }
+}

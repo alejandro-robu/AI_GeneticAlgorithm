@@ -20,7 +20,10 @@ public class AIController : MonoBehaviour
 
 
     private static int MaxPly = 3;
-    public void Awake()
+
+
+    bool isActing = false;
+    public virtual void Awake()
     {
         _player = Body.Info;
         
@@ -145,10 +148,29 @@ public class AIController : MonoBehaviour
         return state.HitPoints[_player.Id] - state.HitPoints[_player.EnemyId];
     }
 
+    //protected virtual void Act()
+    //{
+    //    AttackEvent.Raise( _attackToDo);
+
+    //}
+
+
     protected virtual void Act()
     {
-        AttackEvent.Raise( _attackToDo);
-        
+        if (isActing) return;
+        StartCoroutine(ActDelayed());
+    }
+
+    IEnumerator ActDelayed()
+    {
+        isActing = true;
+
+        yield return null;
+
+        AttackEvent.Raise(_attackToDo);
+
+        yield return null;
+        isActing = false;
     }
 
 }
