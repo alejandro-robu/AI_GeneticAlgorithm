@@ -13,7 +13,7 @@ public class GeneticTrainer : MonoBehaviour
     public List<GeneticGenome> Population = new();
     public GeneticGenome BestGenome;
 
-    const int GENOME_SIZE = 5;
+    const int GENOME_SIZE = 6;
 
     public GeneticBattleEvaluator Evaluator;
 

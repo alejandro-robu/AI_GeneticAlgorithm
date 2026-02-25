@@ -54,7 +54,7 @@ public class GeneticController1on1 : AIController
     {
         _attackToDo = null;
 
-        Debug.Log($"Thinking Mode: {Mode}");
+        
 
         if (Mode == AIMode.Genetic)
         {

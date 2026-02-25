@@ -39,7 +39,7 @@ public class AIController : MonoBehaviour
 
     public void OnGameTurnChange(PlayerInfo currentTurn)
     {
-        if (turnRunning) return;
+        //if (turnRunning) return;
 
         turnRunning = true;
 
@@ -49,6 +49,7 @@ public class AIController : MonoBehaviour
         Think();
         Act();
         
+        //turnRunning = false;
     }
 
     protected virtual void Perceive()
@@ -201,6 +202,8 @@ public class AIController : MonoBehaviour
     {
         if (isActing) return;
         StartCoroutine(ActDelayed());
+
+
     }
 
     IEnumerator ActDelayed()
@@ -213,6 +216,8 @@ public class AIController : MonoBehaviour
 
         yield return null;
         isActing = false;
+
+        turnRunning = false;
     }
 
 

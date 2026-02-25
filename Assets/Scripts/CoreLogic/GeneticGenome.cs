@@ -1,5 +1,4 @@
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 [System.Serializable]
 public class GeneticGenome
@@ -27,7 +26,7 @@ public class GeneticGenome
     }
 
     // ======================================================
-    // CEREBRO GENÉTICO
+    // DECIDE ATTACK
     // ======================================================
     public int DecideAttack(GameState state, int playerId)
     {
@@ -36,55 +35,64 @@ public class GeneticGenome
         var self = players[playerId];
         var enemy = players[self.EnemyId];
 
-        float bestScore = float.MinValue;
-        int bestIndex = 0;
+        float[] scores = new float[self.Attacks.Length];
+        float sum = 0f;
 
         for (int i = 0; i < self.Attacks.Length; i++)
         {
             var atk = self.Attacks[i];
 
+            // si no tienes energía, score = 0
             if (self.Energy < atk.Energy)
-                continue;
-
-            float score = EvaluateAttack(self, enemy, atk);
-
-            if (score > bestScore)
             {
-                bestScore = score;
-                bestIndex = i;
+                scores[i] = 0f;
             }
+            else
+            {
+                scores[i] = Mathf.Max(0f, EvaluateSingleAttack(self, enemy, atk));
+            }
+
+            sum += scores[i];
         }
 
-        return bestIndex;
+        // fallback si ningún ataque es posible
+        if (sum == 0f) return 1;
+
+        // elegir probabilísticamente para no quedarse siempre con Rest
+        float rnd = Random.value * sum;
+        float acc = 0f;
+        for (int i = 0; i < scores.Length; i++)
+        {
+            acc += scores[i];
+            if (acc >= rnd) return i;
+        }
+
+        return 0; // fallback
     }
 
     // ======================================================
-    // Evaluación lineal
+    // EVALUACIÓN DE UN ATAQUE INDIVIDUAL
     // ======================================================
-    float EvaluateAttack(PlayerInfo self,
-                         PlayerInfo enemy,
-                         AttackInfo atk)
+    float EvaluateSingleAttack(PlayerInfo self,
+                               PlayerInfo enemy,
+                               AttackInfo atk)
     {
         float[] f = new float[FEATURE_COUNT];
 
         // -------- FEATURES --------
-        f[0] = self.HP / self.InitialHP;        // vida propia %
-        f[1] = enemy.HP / enemy.InitialHP;      // vida enemigo %
-        f[2] = atk.MinDam / 10f;                // daño mínimo
-        f[3] = atk.MaxDam / 10f;                // daño máximo
-        f[4] = atk.HitChance;                   // precisión
-        f[5] = atk.Energy / 10f;                // coste energía
+        f[0] = self.HP / self.InitialHP;               // vida propia %
+        f[1] = 1f - (enemy.HP / enemy.InitialHP);     // daño al enemigo (invertido)
+        float expectedDamage = (atk.MinDam + atk.MaxDam) / 2f;
+        f[2] = expectedDamage / 20f;                  // daño normalizado
+        f[3] = atk.HitChance;                          // precisión
+        f[4] = 1f - (atk.Energy / 10f);               // coste energía invertido
+        f[5] = expectedDamage / 20f;                  // repetir daño como feature adicional
 
         // -------- DOT PRODUCT --------
         float value = 0f;
-
         for (int i = 0; i < FEATURE_COUNT; i++)
             value += f[i] * Weights[i];
 
         return value;
     }
-
-
-
-    
 }
