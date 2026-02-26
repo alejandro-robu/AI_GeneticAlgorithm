@@ -200,24 +200,13 @@ public class AIController : MonoBehaviour
 
     protected virtual void Act()
     {
-        if (isActing) return;
         StartCoroutine(ActDelayed());
-
-
     }
 
     IEnumerator ActDelayed()
     {
-        isActing = true;
-
         yield return null;
-
         AttackEvent.Raise(_attackToDo);
-
-        yield return null;
-        isActing = false;
-
-        turnRunning = false;
     }
 
 

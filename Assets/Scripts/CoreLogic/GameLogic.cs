@@ -1,7 +1,5 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using UnityEngine;
 
 public class GameLogic : MonoBehaviour
@@ -9,47 +7,48 @@ public class GameLogic : MonoBehaviour
     public PlayerList PlayerList;
     public GameState GameState;
 
-
     public GameEvent EndGameEvent;
     public AttackResultEvent AttackResult;
     public PlayerEvent ChangeTurnEvent;
 
-    private int _count = 0;
-    public IEnumerator Start()
+    private int _count;
+
+    public void ResetLogic()
     {
-        yield return new WaitForEndOfFrame();
+        StopAllCoroutines();
+
+        _count = 0;
+        GameState.TurnNumber = 1;
         GameState.IsFinished = false;
-        ChangeTurn();
+
+        StartCoroutine(StartBattle());
     }
 
-
-    //public void ChangeTurn()
-    //{
-    //    var next = _count;
-    //    _count = (_count + 1) % 2;
-    //    GameState.CurrentPlayer = PlayerList.Players[next];
-    //    ChangeTurnEvent.Raise(PlayerList.Players[next]);
-
-
-    //}
+    IEnumerator StartBattle()
+    {
+        yield return null;
+        ChangeTurn();
+    }
 
     public void ChangeTurn()
     {
         StartCoroutine(ChangeTurnNextFrame());
     }
 
-    private IEnumerator ChangeTurnNextFrame()
+    IEnumerator ChangeTurnNextFrame()
     {
-        yield return null; // espera un frame
+        yield return null;
 
         var next = _count;
-        _count = (_count + 1) % 2;
+        _count = (_count + 1) % PlayerList.Players.Count;
 
         GameState.CurrentPlayer = PlayerList.Players[next];
-        ChangeTurnEvent.Raise(PlayerList.Players[next]);
+        GameState.TurnNumber++;   // ⭐⭐⭐ CLAVE
+
+        ChangeTurnEvent.Raise(GameState.CurrentPlayer);
     }
 
-    private bool EndGameTest()
+    bool EndGameTest()
     {
         if (PlayerList.Players.Any(p => p.HP <= 0))
         {
@@ -62,36 +61,24 @@ public class GameLogic : MonoBehaviour
 
     public void OnAttackDone(Attack att)
     {
-
-        Debug.Log($"Received Attack {att}");
-        var hitRoll = Dice.PercentageChance();
         var result = ScriptableObject.CreateInstance<AttackResult>();
-        result.IsHit = false;
         result.Attack = att;
-        
-        if (result.Attack != null)
+
+        if (att.Source.Energy >= att.AttackMade.Energy &&
+            Dice.PercentageChance() <= att.AttackMade.HitChance)
         {
-            result.Energy = att.AttackMade.Energy;
-            if (att.Source.Energy >= att.AttackMade.Energy && hitRoll <= att.AttackMade.HitChance)
-            {
-                result.IsHit = true;
+            result.IsHit = true;
+            result.Damage =
+                Dice.RangeRoll(att.AttackMade.MinDam,
+                               att.AttackMade.MaxDam + 1);
 
-                result.Damage = Dice.RangeRoll(att.AttackMade.MinDam, att.AttackMade.MaxDam + 1);
-
-
-                att.Target.HP -= result.Damage;
-
-            }
-
-            if (att.Source.Energy >= att.AttackMade.Energy)
-            {
-                att.Source.Energy -= result.Energy;
-            }
-
-            Debug.Log($"With Result \n    {result}");
-            AttackResult.Raise(result);
+            att.Target.HP -= result.Damage;
         }
-        
+
+        att.Source.Energy -= att.AttackMade.Energy;
+
+        AttackResult.Raise(result);
+
         if (!EndGameTest())
             ChangeTurn();
     }

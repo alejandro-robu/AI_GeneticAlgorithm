@@ -52,18 +52,10 @@ public class GeneticController1on1 : AIController
 
     public override void Think()
     {
-        _attackToDo = null;
-
-        
-
-        if (Mode == AIMode.Genetic)
-        {
+        if (Mode == AIMode.Genetic && ActiveGenome != null)
             ExpectGenetic();
-        }
         else
-        {
             ExpectMiniMax();
-        }
     }
 
     void ChooseBestAttack()

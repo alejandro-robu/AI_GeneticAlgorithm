@@ -5,6 +5,7 @@ using UnityEngine;
 public class GeneticBattleEvaluator : MonoBehaviour
 {
     public GeneticController1on1 GeneticAI;
+    public GameLogic GameLogic;
     public AIController OpponentAI;
 
     float startHP_AI;
@@ -65,24 +66,35 @@ public class GeneticBattleEvaluator : MonoBehaviour
              - (startHP_AI - aiHP);
     }
 
+    //IEnumerator ResetBattle()
+    //{
+    //    GeneticAI.StopAllCoroutines();
+    //    OpponentAI.StopAllCoroutines();
+
+    //    yield return null;
+
+    //    GeneticAI.GameState.ResetState();
+
+    //    yield return null;
+
+
+    //    var firstPlayer =
+    //        GeneticAI.GameState.ListOfPlayers.Players[0];
+    //    Debug.Log($"Starting new battle, first player is: {firstPlayer}");
+
+    //    GeneticAI.OnGameTurnChange(firstPlayer);
+    //    OpponentAI.OnGameTurnChange(firstPlayer);
+    //}
+
     IEnumerator ResetBattle()
     {
-        GeneticAI.StopAllCoroutines();
-        OpponentAI.StopAllCoroutines();
-
         yield return null;
 
         GeneticAI.GameState.ResetState();
 
+        GameLogic.ResetLogic();
+
         yield return null;
-
-
-        var firstPlayer =
-            GeneticAI.GameState.ListOfPlayers.Players[0];
-        Debug.Log($"Starting new battle, first player is: {firstPlayer}");
-
-        GeneticAI.OnGameTurnChange(firstPlayer);
-        OpponentAI.OnGameTurnChange(firstPlayer);
     }
 
     public void SwitchToPlayMode(GeneticGenome best)
