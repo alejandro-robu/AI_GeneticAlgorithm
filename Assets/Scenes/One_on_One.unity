@@ -269,8 +269,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 229f829808d36204fa076858c5e722aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PopulationSize: 10
-  Generations: 10
+  PopulationSize: 20
+  Generations: 30
   MatchesPerGenome: 10
   MutationRate: 0.15
   Population: []
