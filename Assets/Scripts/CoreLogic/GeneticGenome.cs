@@ -95,4 +95,7 @@ public class GeneticGenome
 
         return value;
     }
+
+
+
 }
