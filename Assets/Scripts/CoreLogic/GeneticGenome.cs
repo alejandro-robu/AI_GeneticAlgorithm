@@ -125,4 +125,7 @@ public class GeneticGenome
 
         return score;
     }
+
+
+
 }
