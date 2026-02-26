@@ -6,7 +6,6 @@ public class GeneticGenome
     public float[] Weights;
     public float Fitness;
 
-    // Nº de features usadas por ataque
     public const int FEATURE_COUNT = 6;
 
     public GeneticGenome(int size)
@@ -26,7 +25,7 @@ public class GeneticGenome
     }
 
     // ======================================================
-    // DECIDE ATTACK
+    // DECIDE ATTACK (SOFTMAX SELECTION)
     // ======================================================
     public int DecideAttack(GameState state, int playerId)
     {
@@ -42,58 +41,89 @@ public class GeneticGenome
         {
             var atk = self.Attacks[i];
 
-            // si no tienes energía, score = 0
             if (self.Energy < atk.Energy)
             {
                 scores[i] = 0f;
-            }
-            else
-            {
-                scores[i] = Mathf.Max(0f, EvaluateSingleAttack(self, enemy, atk));
+                continue;
             }
 
+            float val = EvaluateSingleAttack(self, enemy, atk);
+
+            Debug.Log($"ATTACK {atk} SCORE: {val}");
+
+            // evita valores negativos dominantes
+            scores[i] = Mathf.Exp(val);
             sum += scores[i];
         }
 
-        // fallback si ningún ataque es posible
-        if (sum == 0f) return 1;
+        // fallback seguro
+        if (sum <= 0f)
+            return Random.Range(0, self.Attacks.Length);
 
-        // elegir probabilísticamente para no quedarse siempre con Rest
         float rnd = Random.value * sum;
         float acc = 0f;
+
         for (int i = 0; i < scores.Length; i++)
         {
             acc += scores[i];
-            if (acc >= rnd) return i;
+            if (acc >= rnd)
+                return i;
         }
 
-        return 0; // fallback
+        return 0;
     }
 
     // ======================================================
-    // EVALUACIÓN DE UN ATAQUE INDIVIDUAL
+    // EVALUACIÓN GENÉTICA REAL
     // ======================================================
     float EvaluateSingleAttack(PlayerInfo self,
                                PlayerInfo enemy,
                                AttackInfo atk)
     {
-        float[] f = new float[FEATURE_COUNT];
+        float expectedDamage =
+            ((atk.MinDam + atk.MaxDam) * 0.5f)
+            * atk.HitChance;
 
-        // -------- FEATURES --------
-        f[0] = self.HP / self.InitialHP;               // vida propia %
-        f[1] = 1f - (enemy.HP / enemy.InitialHP);     // daño al enemigo (invertido)
-        float expectedDamage = (atk.MinDam + atk.MaxDam) / 2f;
-        f[2] = expectedDamage / 20f;                  // daño normalizado
-        f[3] = atk.HitChance;                          // precisión
-        f[4] = 1f - (atk.Energy / 10f);               // coste energía invertido
-        f[5] = expectedDamage / 20f;                  // repetir daño como feature adicional
+        float myHPpct = self.HP / self.InitialHP;
+        float enemyHPpct = enemy.HP / enemy.InitialHP;
 
-        // -------- DOT PRODUCT --------
-        float value = 0f;
-        for (int i = 0; i < FEATURE_COUNT; i++)
-            value += f[i] * Weights[i];
+        float damageRelative =
+            expectedDamage / enemy.InitialHP;
 
-        return value;
+        float energyCost =
+            atk.Energy / 10f;
+
+        float restPenalty = 0f;
+
+        if (atk.Energy < 0f) // es REST o similar
+        {
+            // si ya tienes energía suficiente, es mala decisión
+            if (self.Energy > self.InitialEnergy * 0.5f)
+                restPenalty = 1f;
+        }
+
+        float score =
+              Weights[0] * damageRelative
+            + Weights[1] * atk.HitChance
+            + Weights[2] * (-energyCost)
+            + Weights[3] * myHPpct
+            + Weights[4] * (1f - enemyHPpct)
+            - Weights[5] * restPenalty;
+
+        //float score =
+        //      damageRelative
+        //    + atk.HitChance
+        //    + (-energyCost)
+        //    + myHPpct
+        //    + (1f - enemyHPpct)
+        //    - restPenalty;
+
+        // BONUS DE FINALIZACIÓN (MUY IMPORTANTE)
+        if (enemy.HP - expectedDamage <= 0)
+            score += Weights[5];
+
+
+        return score;
     }
 
 
