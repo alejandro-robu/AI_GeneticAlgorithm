@@ -56,14 +56,34 @@ public class GeneticBattleEvaluator : MonoBehaviour
 
     float CalculateFitness()
     {
-        var players =
-            GeneticAI.GameState.ListOfPlayers.Players;
+        var players = GeneticAI.GameState.ListOfPlayers.Players;
 
         float aiHP = players[0].HP;
         float enemyHP = players[1].HP;
 
-        return (startHP_Enemy - enemyHP)
-             - (startHP_AI - aiHP);
+        float damageDealt = startHP_Enemy - enemyHP;
+        float damageTaken = startHP_AI - aiHP;
+
+        float fitness = 0f;
+
+        // daño al enemigo (principal objetivo)
+        fitness += damageDealt * 2.0f;
+
+        // supervivencia
+        fitness += aiHP * 1.0f;
+
+        // penalización por daño recibido
+        fitness -= damageTaken * 1.5f;
+
+        // bonus por victoria
+        //if (enemyHP <= 0)
+        //    fitness += 500f;
+
+        // penalización por derrota
+        if (aiHP <= 0)
+            fitness -= 500f;
+
+        return fitness;
     }
 
     //IEnumerator ResetBattle()
