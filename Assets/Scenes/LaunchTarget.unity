@@ -466,8 +466,8 @@ MonoBehaviour:
     fitness: 0
   Generations: 20
   PopulationSize: 30
-  crossoverType: 2
-  mutationType: 2
+  crossoverType: 1
+  mutationType: 1
 --- !u!1 &820417570
 GameObject:
   m_ObjectHideFlags: 0

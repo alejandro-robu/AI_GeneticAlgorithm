@@ -26,7 +26,6 @@ public class ShotgunConfiguration : MonoBehaviour
 
     private bool _ready;
     private bool _finishedTraining = false;
-    // Start is called before the first frame update
     void Start()
     {
         Time.timeScale = 50f;
@@ -86,13 +85,11 @@ public class ShotgunConfiguration : MonoBehaviour
         var force = transform.up * Strength;
         shot.AddForce(force,ForceMode.Impulse);
     }
-    // Update is called once per frame
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space) && _finishedTraining)
         {
             Time.timeScale = 1f;
-            //CurrentIndividual = Genetic.GetFittest();
             ShooterConfigure(CurrentIndividual.degree_x, CurrentIndividual.degree_y, CurrentIndividual.strength);
             Shot();
             _ready = false;

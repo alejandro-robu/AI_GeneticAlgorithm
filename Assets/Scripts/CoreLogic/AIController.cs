@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 public class AIController : MonoBehaviour
@@ -26,11 +25,8 @@ public class AIController : MonoBehaviour
 
     protected LogicState _currentLogicState;
 
-
     private static int MaxPly = 3;
 
-    bool turnRunning = false;
-    bool isActing = false;
     public virtual void Awake()
     {
         _player = Body.Info;
@@ -39,17 +35,11 @@ public class AIController : MonoBehaviour
 
     public void OnGameTurnChange(PlayerInfo currentTurn)
     {
-        //if (turnRunning) return;
-
-        turnRunning = true;
-
         Debug.Log($"Current Turn: {currentTurn.Name}");
         if (currentTurn != _player) return;
         Perceive();
         Think();
         Act();
-        
-        //turnRunning = false;
     }
 
     protected virtual void Perceive()
@@ -73,8 +63,6 @@ public class AIController : MonoBehaviour
         }
 
     }
-
-
 
     protected void ExpectMiniMax()
     {
@@ -103,7 +91,6 @@ public class AIController : MonoBehaviour
         Debug.Log($"Genetic ---> Action:{_attackToDo}:{chosen}");
     }
 
-
     private float _alpha;
     private float _beta;
     private float MaxValor(LogicState state)
@@ -119,7 +106,6 @@ public class AIController : MonoBehaviour
         foreach (var (att,logicState) in children)
         {
             var val = RandomValor(logicState,att);
-            //Debug.Log($"val:{val} -> {att}");
             if (val > _alpha)
             {
                 _alpha = val;
@@ -191,13 +177,6 @@ public class AIController : MonoBehaviour
         return state.HitPoints[_player.Id] - state.HitPoints[_player.EnemyId];
     }
 
-    //protected virtual void Act()
-    //{
-    //    AttackEvent.Raise( _attackToDo);
-
-    //}
-
-
     protected virtual void Act()
     {
         StartCoroutine(ActDelayed());
@@ -208,8 +187,6 @@ public class AIController : MonoBehaviour
         yield return null;
         AttackEvent.Raise(_attackToDo);
     }
-
-
 }
 
 
