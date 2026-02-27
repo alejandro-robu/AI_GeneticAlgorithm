@@ -17,7 +17,6 @@ public class GeneticBattleEvaluator : MonoBehaviour
     {
         GeneticAI.ActiveGenome = genome;
 
-        // ---- RESET ----
         yield return StartCoroutine(ResetBattle());
 
         startHP_AI =
@@ -28,10 +27,8 @@ public class GeneticBattleEvaluator : MonoBehaviour
             GeneticAI.GameState.ListOfPlayers.Players[
                 GeneticAI.Body.Info.EnemyId].HP;
 
-        // ---- RUN ----
         yield return StartCoroutine(RunBattle());
 
-        // ---- FITNESS ----
         float fitness = CalculateFitness();
 
         onFinished?.Invoke(fitness);
@@ -66,46 +63,22 @@ public class GeneticBattleEvaluator : MonoBehaviour
 
         float fitness = 0f;
 
-        // daño al enemigo (principal objetivo)
-        fitness += damageDealt * 2.0f;
+        //bonificación por daño realizado
+        fitness += damageDealt;
 
-        // supervivencia
-        fitness += aiHP * 1.0f;
-
-        // penalización por daño recibido
-        fitness -= damageTaken * 1.5f;
+        //penalización por daño recibido
+        fitness -= damageTaken;
 
         // bonus por victoria
         //if (enemyHP <= 0)
         //    fitness += 500f;
 
-        // penalización por derrota
-        if (aiHP <= 0)
-            fitness -= 500f;
+        //// penalización por derrota
+        //if (aiHP <= 0)
+        //    fitness -= 500f;
 
         return fitness;
     }
-
-    //IEnumerator ResetBattle()
-    //{
-    //    GeneticAI.StopAllCoroutines();
-    //    OpponentAI.StopAllCoroutines();
-
-    //    yield return null;
-
-    //    GeneticAI.GameState.ResetState();
-
-    //    yield return null;
-
-
-    //    var firstPlayer =
-    //        GeneticAI.GameState.ListOfPlayers.Players[0];
-    //    Debug.Log($"Starting new battle, first player is: {firstPlayer}");
-
-    //    GeneticAI.OnGameTurnChange(firstPlayer);
-    //    OpponentAI.OnGameTurnChange(firstPlayer);
-    //}
-
     IEnumerator ResetBattle()
     {
         yield return null;

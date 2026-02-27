@@ -40,17 +40,6 @@ public class GeneticController1on1 : AIController
 
     public GeneticGenome ActiveGenome;
 
-    //protected override void Think()
-    //{
-    //    if (ActiveGenome == null)
-    //    {
-    //        RandomAction();
-    //        return;
-    //    }
-
-    //    ChooseBestAttack();
-    //}
-
     public override void Think()
     {
         if (ActiveGenome == null)

@@ -6,14 +6,14 @@ public class GeneticGenome
     public float[] Weights;
     public float Fitness;
 
-    public const int FEATURE_COUNT = 6;
+    public const int FEATURE_COUNT = 7;
 
-    public GeneticGenome(int size)
+    public GeneticGenome(int size = FEATURE_COUNT)
     {
         Weights = new float[size];
 
         for (int i = 0; i < size; i++)
-            Weights[i] = Random.Range(-1f, 1f);
+            Weights[i] = Random.Range(0f, 1f);
     }
 
     public GeneticGenome Clone()
@@ -24,9 +24,6 @@ public class GeneticGenome
         return g;
     }
 
-    // ======================================================
-    // DECIDE ATTACK (SOFTMAX SELECTION)
-    // ======================================================
     public int DecideAttack(GameState state, int playerId)
     {
         var players = state.ListOfPlayers.Players;
@@ -34,8 +31,10 @@ public class GeneticGenome
         var self = players[playerId];
         var enemy = players[self.EnemyId];
 
-        float[] scores = new float[self.Attacks.Length];
-        float sum = 0f;
+        float[] rawScores = new float[self.Attacks.Length];
+        float[] expScores = new float[self.Attacks.Length];
+
+        float maxScore = float.MinValue;
 
         for (int i = 0; i < self.Attacks.Length; i++)
         {
@@ -43,29 +42,40 @@ public class GeneticGenome
 
             if (self.Energy < atk.Energy)
             {
-                scores[i] = 0f;
+                rawScores[i] = float.MinValue;
                 continue;
             }
 
             float val = EvaluateSingleAttack(self, enemy, atk);
+            rawScores[i] = val;
 
-            Debug.Log($"ATTACK {atk} SCORE: {val}");
-
-            // evita valores negativos dominantes
-            scores[i] = Mathf.Exp(val);
-            sum += scores[i];
+            if (val > maxScore)
+                maxScore = val;
         }
 
-        // fallback seguro
+        float sum = 0f;
+
+        for (int i = 0; i < rawScores.Length; i++)
+        {
+            if (rawScores[i] == float.MinValue)
+            {
+                expScores[i] = 0f;
+                continue;
+            }
+
+            expScores[i] = Mathf.Exp(rawScores[i] - maxScore);
+            sum += expScores[i];
+        }
+
         if (sum <= 0f)
             return Random.Range(0, self.Attacks.Length);
 
         float rnd = Random.value * sum;
         float acc = 0f;
 
-        for (int i = 0; i < scores.Length; i++)
+        for (int i = 0; i < expScores.Length; i++)
         {
-            acc += scores[i];
+            acc += expScores[i];
             if (acc >= rnd)
                 return i;
         }
@@ -73,34 +83,32 @@ public class GeneticGenome
         return 0;
     }
 
-    // ======================================================
-    // EVALUACIÓN GENÉTICA REAL
-    // ======================================================
+
     float EvaluateSingleAttack(PlayerInfo self,
                                PlayerInfo enemy,
                                AttackInfo atk)
     {
         float expectedDamage =
-            ((atk.MinDam + atk.MaxDam) * 0.5f)
-            * atk.HitChance;
+            ((atk.MinDam + atk.MaxDam) * 0.5f) * atk.HitChance;
 
         float myHPpct = self.HP / self.InitialHP;
         float enemyHPpct = enemy.HP / enemy.InitialHP;
 
-        float damageRelative =
-            expectedDamage / enemy.InitialHP;
+        float damageRelative = expectedDamage / enemy.InitialHP;
 
-        float energyCost =
-            atk.Energy / 10f;
+        float energyCost = atk.Energy / self.InitialEnergy;
 
         float restPenalty = 0f;
 
-        if (atk.Energy < 0f) // es REST o similar
+        if (atk.Energy < 0f)
         {
-            // si ya tienes energía suficiente, es mala decisión
             if (self.Energy > self.InitialEnergy * 0.5f)
                 restPenalty = 1f;
         }
+
+        float killBonus = 0f;
+        if (enemy.HP - expectedDamage <= 0)
+            killBonus = 1f;
 
         float score =
               Weights[0] * damageRelative
@@ -108,20 +116,8 @@ public class GeneticGenome
             + Weights[2] * (-energyCost)
             + Weights[3] * myHPpct
             + Weights[4] * (1f - enemyHPpct)
-            - Weights[5] * restPenalty;
-
-        //float score =
-        //      damageRelative
-        //    + atk.HitChance
-        //    + (-energyCost)
-        //    + myHPpct
-        //    + (1f - enemyHPpct)
-        //    - restPenalty;
-
-        // BONUS DE FINALIZACIÓN (MUY IMPORTANTE)
-        if (enemy.HP - expectedDamage <= 0)
-            score += Weights[5];
-
+            + Weights[5] * (-restPenalty)
+            + Weights[6] * killBonus;
 
         return score;
     }

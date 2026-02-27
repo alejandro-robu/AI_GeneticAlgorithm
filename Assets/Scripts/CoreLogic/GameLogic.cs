@@ -43,7 +43,7 @@ public class GameLogic : MonoBehaviour
         _count = (_count + 1) % PlayerList.Players.Count;
 
         GameState.CurrentPlayer = PlayerList.Players[next];
-        GameState.TurnNumber++;   // ⭐⭐⭐ CLAVE
+        GameState.TurnNumber++; 
 
         ChangeTurnEvent.Raise(GameState.CurrentPlayer);
     }

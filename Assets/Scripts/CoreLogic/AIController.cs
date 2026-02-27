@@ -247,7 +247,7 @@ public class LogicState
     public LogicState(LogicState parentState, float[] deltaHitPoints, float[] deltaEnergies, float prob): this(parentState,deltaHitPoints,deltaEnergies)
     {
         Probability = prob;
-        Turn--; //No turn passed. Random State ongoing
+        Turn--;
     }
 
     public List<(AttackInfo,LogicState)> GenerateChildren(int idxPlayer, AttackInfo[] attacks)

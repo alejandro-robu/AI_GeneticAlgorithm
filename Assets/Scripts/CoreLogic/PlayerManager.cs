@@ -19,7 +19,6 @@ public class PlayerManager : MonoBehaviour
     public Animator Animator;
 
     public GameObject WeaponMountPoint;
-    // Start is called before the first frame update
     void Start()
     {
         _renderer = GetComponentInChildren<MeshRenderer>();
