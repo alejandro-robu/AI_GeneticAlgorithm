@@ -24,6 +24,17 @@ public class GameLogic : MonoBehaviour
         StartCoroutine(StartBattle());
     }
 
+    public void ResetLogicAfterTraining()
+    {
+        StopAllCoroutines();
+
+        _count = 0;
+        GameState.TurnNumber = 1;
+        GameState.IsFinished = true;
+
+        StartCoroutine(StartBattle());
+    }
+
     IEnumerator StartBattle()
     {
         yield return null;
@@ -61,6 +72,12 @@ public class GameLogic : MonoBehaviour
 
     public void OnAttackDone(Attack att)
     {
+        if (att == null)
+        {
+            Debug.Log("NO ATTACK GAME LOGIC");
+            return;
+        }
+
         var result = ScriptableObject.CreateInstance<AttackResult>();
         result.Attack = att;
 

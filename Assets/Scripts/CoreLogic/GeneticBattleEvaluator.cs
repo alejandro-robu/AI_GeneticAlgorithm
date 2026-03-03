@@ -63,19 +63,8 @@ public class GeneticBattleEvaluator : MonoBehaviour
 
         float fitness = 0f;
 
-        //bonificación por daño realizado
         fitness += damageDealt;
-
-        //penalización por daño recibido
         fitness -= damageTaken;
-
-        // bonus por victoria
-        //if (enemyHP <= 0)
-        //    fitness += 500f;
-
-        //// penalización por derrota
-        //if (aiHP <= 0)
-        //    fitness -= 500f;
 
         return fitness;
     }
@@ -90,12 +79,29 @@ public class GeneticBattleEvaluator : MonoBehaviour
         yield return null;
     }
 
+    IEnumerator FinalizeTraining()
+    {
+        yield return null;
+
+        GeneticAI.GameState.ResetState();
+
+        GameLogic.ResetLogicAfterTraining();
+
+        GameLogic.GameState.RightPlayerIsHuman = true;
+
+        yield return null;
+    }
+
     public void SwitchToPlayMode(GeneticGenome best)
     {
         Debug.Log("SWITCHING TO PLAY MODE");
 
+
         GeneticAI.ActiveGenome = best;
         GeneticAI.CurrentMode =
             GeneticController1on1.ActMode.Play;
+
+        StopAllCoroutines();
+        StartCoroutine(FinalizeTraining());
     }
 }

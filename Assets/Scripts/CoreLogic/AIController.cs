@@ -38,7 +38,7 @@ public class AIController : MonoBehaviour
         Debug.Log($"Current Turn: {currentTurn.Name}");
         if (currentTurn != _player) return;
         Perceive();
-        Think();
+        StartCoroutine( Think());
         Act();
     }
 
@@ -47,14 +47,22 @@ public class AIController : MonoBehaviour
         _currentLogicState = new LogicState(GameState);
     }
 
-    public virtual void Think()
+    public virtual IEnumerator Think()
     {
         _attackToDo = null;
 
         switch (Mode)
         {
             case AIMode.Minimax:
-                ExpectMiniMax();
+
+                if (!GameState.IsFinished)
+                    ExpectMiniMax();
+                else
+                {
+                    yield return new WaitUntil(() => _attackToDo != null);
+                    Debug.Log("Esperando input");   
+                }
+
                 break;
 
             case AIMode.Genetic:

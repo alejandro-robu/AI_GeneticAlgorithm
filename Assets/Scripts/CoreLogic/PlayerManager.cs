@@ -32,6 +32,12 @@ public class PlayerManager : MonoBehaviour
 
     public void OnAttackMade(Attack att)
     {
+        if (att == null)
+        {
+            Debug.Log("NO ATTACK PLAYERMANAGER");
+            return;
+        }
+
         if (att.Source == Info)
         {
             Animator.Play("Attack");

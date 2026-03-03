@@ -30,6 +30,10 @@ public class UIPlayersManager : MonoBehaviour
             {
                 DeactivateButtons(LeftPlayerPanel);
             }
+            else
+            {
+                ActivateButtons(LeftPlayerPanel);
+            }
         }
         if (GameState.CurrentPlayer == RightPlayerPanel.Player)
         {
@@ -39,6 +43,10 @@ public class UIPlayersManager : MonoBehaviour
             if (!GameState.RightPlayerIsHuman)
             {
                 DeactivateButtons(RightPlayerPanel);
+            }
+            else
+            {
+                ActivateButtons(RightPlayerPanel);
             }
         }
     }

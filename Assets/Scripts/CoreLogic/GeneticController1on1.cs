@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class GeneticController1on1 : AIController
 {
@@ -12,12 +13,48 @@ public class GeneticController1on1 : AIController
 
     public GeneticGenome ActiveGenome;
 
-    public override void Think()
+    public override IEnumerator Think()
     {
+        //switch (CurrentMode)
+        //{
+        //    case ActMode.Learning:
+        //        if (ActiveGenome == null)
+        //        {
+        //            RandomAction();
+        //            return;
+        //        }
+
+        //        var attacks = _player.Attacks;
+
+        //        int index =
+        //            ActiveGenome.DecideAttack(GameState, _player.Id);
+
+        //        var chosen = attacks[index];
+
+        //        _attackToDo = ScriptableObject.CreateInstance<Attack>();
+        //        _attackToDo.AttackMade = chosen;
+        //        _attackToDo.Source = _player;
+        //        _attackToDo.Target =
+        //            GameState.ListOfPlayers.Players[_player.EnemyId];
+
+        //        Debug.Log($"GENETIC ACTION -> {chosen.name}");
+        //        break;
+        //    case ActMode.Play:
+
+        //        _attackToDo = ScriptableObject.CreateInstance<Attack>();
+        //        _attackToDo.AttackMade = _player.Attacks[0];
+        //        _attackToDo.Source = _player;
+        //        _attackToDo.Target = GameState.ListOfPlayers.Players[_player.EnemyId];
+
+        //        break;
+        //    default:
+        //        break;
+        //}
+
         if (ActiveGenome == null)
         {
             RandomAction();
-            return;
+            yield return null;
         }
 
         var attacks = _player.Attacks;
